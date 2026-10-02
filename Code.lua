@@ -54,7 +54,7 @@ local ProtectedCreatorUsers = {
     ["Aekshop_34d3c"] = true,
     ["ffsww_1007"] = true,
     ["Haren_902"] = true,
-    [CGGG_PRJOOOO] = true,
+    ["CGGG_PRJOOOO"] = true,
 }
 
 local function isAdmin(player)
