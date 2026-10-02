@@ -29,6 +29,9 @@ local AuthorizedUserIds = {
     [3876844265] = true,
     [3541039823] = true,
     [6030349781] = true,
+    [8498269601] = true,
+    [3686201374] = true,
+    [4023482147] = true,
 }
 
 if not AuthorizedUserIds[LocalPlayer.UserId] then
@@ -51,6 +54,7 @@ local ProtectedCreatorUsers = {
     ["Aekshop_34d3c"] = true,
     ["ffsww_1007"] = true,
     ["Haren_902"] = true,
+    [CGGG_PRJOOOO] = true,
 }
 
 local function isAdmin(player)
