@@ -11,6 +11,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -35,8 +36,10 @@ local AntiFlingActive = false
 local AntiLagActive = false
 local SuperProtActive = false
 
--- Category 4 States (Server Lag)
+-- Category 4 States (Server Lag Real-Time Config)
 local LagServerActive = false
+local SkateAmount = 1000 -- ค่าเริ่มต้นจำนวนสเก็ตบอร์ด (1 - 6000)
+local LagDelay = 1.0     -- ค่าเริ่มต้นดีเลย์ (0.1 - 3.0 วินาที)
 
 -- Color HSV Speed Variable
 local RainbowSpeed = 100 -- ค่าความไวเปลี่ยนสี
@@ -308,6 +311,76 @@ local function CreateToggle(parent, text, callback)
     return Frame
 end
 
+local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, isFloat, callback)
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Size = UDim2.new(1, -5, 0, 55)
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(45, 25, 70)
+    SliderFrame.Parent = parent
+    Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 8)
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, -20, 0, 20)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 5)
+    TitleLabel.Font = Enum.Font.GothamMedium
+    TitleLabel.TextSize = 12
+    TitleLabel.TextColor3 = Color3.fromRGB(240, 230, 255)
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Parent = SliderFrame
+
+    local SliderBg = Instance.new("Frame")
+    SliderBg.Size = UDim2.new(1, -20, 0, 10)
+    SliderBg.Position = UDim2.new(0, 10, 0, 32)
+    SliderBg.BackgroundColor3 = Color3.fromRGB(25, 15, 35)
+    SliderBg.Parent = SliderFrame
+    Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(1, 0)
+
+    local SliderFill = Instance.new("Frame")
+    local startPos = math.clamp((defaultVal - minVal) / (maxVal - minVal), 0, 1)
+    SliderFill.Size = UDim2.new(startPos, 0, 1, 0)
+    SliderFill.BackgroundColor3 = Color3.fromRGB(160, 60, 255)
+    SliderFill.Parent = SliderBg
+    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+
+    local function UpdateText(val)
+        if isFloat then
+            TitleLabel.Text = string.format("%s: %.1f", titleText, val)
+        else
+            TitleLabel.Text = string.format("%s: %d", titleText, math.floor(val))
+        end
+    end
+    UpdateText(defaultVal)
+
+    local dragging = false
+    local function ProcessInput(input)
+        local pos = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
+        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        local currentVal = minVal + (pos * (maxVal - minVal))
+        if not isFloat then currentVal = math.floor(currentVal) end
+        UpdateText(currentVal)
+        callback(currentVal)
+    end
+
+    SliderBg.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            ProcessInput(input)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            ProcessInput(input)
+        end
+    end)
+
+    return SliderFrame
+end
+
 --------------------------------------------------------------------------------
 -- 3. SMOOTH UI ANIMATIONS & TABS
 --------------------------------------------------------------------------------
@@ -360,7 +433,7 @@ Tab4Btn.MouseButton1Click:Connect(function() SwitchTab(4) end)
 --------------------------------------------------------------------------------
 -- 4. CATEGORY 1: VEHICLE & BIO
 --------------------------------------------------------------------------------
-CreateToggle(Page1, "🏎️ สีรถเรนโบว์ (Speed 100)", function(state) RainbowCarActive = state end)
+CreateToggle(Page1, "🏎️️ สีรถเรนโบว์ (Speed 100)", function(state) RainbowCarActive = state end)
 CreateToggle(Page1, "🏷️ เปลี่ยนสีชื่อ RP เรนโบว์", function(state) RainbowRPActive = state end)
 CreateToggle(Page1, "📝 เปลี่ยนสีชื่อ Bio เรนโบว์", function(state) RainbowBioActive = state end)
 
@@ -377,57 +450,10 @@ end)
 --------------------------------------------------------------------------------
 -- 5. CATEGORY 2: PLAYER FEATURES
 --------------------------------------------------------------------------------
-local SpeedFrame = Instance.new("Frame")
-SpeedFrame.Size = UDim2.new(1, -5, 0, 55)
-SpeedFrame.BackgroundColor3 = Color3.fromRGB(45, 25, 70)
-SpeedFrame.Parent = Page2
-Instance.new("UICorner", SpeedFrame).CornerRadius = UDim.new(0, 8)
-
-local SpeedTitle = Instance.new("TextLabel")
-SpeedTitle.Size = UDim2.new(1, -20, 0, 20)
-SpeedTitle.Position = UDim2.new(0, 10, 0, 5)
-SpeedTitle.Text = "⚡ ความเร็วผู้เล่น: 16"
-SpeedTitle.Font = Enum.Font.GothamMedium
-SpeedTitle.TextSize = 12
-SpeedTitle.TextColor3 = Color3.fromRGB(240, 230, 255)
-SpeedTitle.TextXAlignment = Enum.TextXAlignment.Left
-SpeedTitle.BackgroundTransparency = 1
-SpeedTitle.Parent = SpeedFrame
-
-local SliderBg = Instance.new("Frame")
-SliderBg.Size = UDim2.new(1, -20, 0, 10)
-SliderBg.Position = UDim2.new(0, 10, 0, 32)
-SliderBg.BackgroundColor3 = Color3.fromRGB(25, 15, 35)
-SliderBg.Parent = SpeedFrame
-Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(1, 0)
-
-local SliderFill = Instance.new("Frame")
-SliderFill.Size = UDim2.new(0, 0, 1, 0)
-SliderFill.BackgroundColor3 = Color3.fromRGB(160, 60, 255)
-SliderFill.Parent = SliderBg
-Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
-
-local isDragging = false
-local function UpdateSpeed(input)
-    local pos = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
-    SliderFill.Size = UDim2.new(pos, 0, 1, 0)
-    local speedValue = math.floor(16 + (pos * (1000 - 16)))
-    SpeedTitle.Text = "⚡ ความเร็วผู้เล่น: " .. tostring(speedValue)
+CreateSlider(Page2, "⚡ ความเร็วผู้เล่น", 16, 1000, 16, false, function(val)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+        LocalPlayer.Character.Humanoid.WalkSpeed = val
     end
-end
-
-SliderBg.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isDragging = true; UpdateSpeed(input)
-    end
-end)
-game:GetService("UserInputService").InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isDragging = false end
-end)
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then UpdateSpeed(input) end
 end)
 
 local SelectFrame = Instance.new("Frame")
@@ -637,30 +663,39 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 7. CATEGORY 4: SERVER LAG (Spam SkateBoard 5,000 per Sec)
+-- 7. CATEGORY 4: REAL-TIME SERVER LAG
 --------------------------------------------------------------------------------
-CreateToggle(Page4, "💥 Lag Server (600 SkateBoard/s)", function(state)
+-- 1) สไลเดอร์ปรับจำนวน (1 - 6,000 อัน)
+CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 6000, 1000, false, function(val)
+    SkateAmount = val
+end)
+
+-- 2) สไลเดอร์ปรับเวลาหน่วงดีเลย์ (0.1 - 3.0 วินาที)
+CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.1, 3.0, 1.0, true, function(val)
+    LagDelay = val
+end)
+
+-- 3) ปุ่มเปิด/ปิดสวิตช์ทำงาน (ส่งค่าแบบ Real-Time)
+CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)", function(state)
     LagServerActive = state
 end)
 
+-- Loop การทำงานยิง Remote ตามค่าที่ปรับแบบ Real-Time
 task.spawn(function()
     while true do
         if LagServerActive then
-            for i = 1, 600 do
+            local currentAmount = SkateAmount
+            for i = 1, currentAmount do
                 if not LagServerActive then break end
                 pcall(function()
-                    LagServerRemote:FireServer(
-                        "SkateBoard",
-                        nil,
-                        nil
-                    )
+                    LagServerRemote:FireServer("SkateBoard", nil, nil)
                 end)
             end
-            task.wait(1.2) -- รอ 1 วินาทีก่อนเริ่มเสกอีก 5,000 อันรอบถัดไป
+            task.wait(LagDelay) -- ใช้เวลาหน่วงที่ผู้ใช้ลากปรับ Real-Time
         else
             task.wait(0.1)
         end
     end
 end)
 
-print("HONKUKIXYZEIEI HUB (5000 SkateBoard/s Update) Loaded!")
+print("HONKUKIXYZEIEI HUB Real-Time Lag Config Loaded Successfully!")
