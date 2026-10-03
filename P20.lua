@@ -138,7 +138,7 @@ CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.Parent = Header
 
--- Tab Navigation Buttons (4 Tabs now)
+-- Tab Navigation Buttons (4 Tabs)
 local TabContainer = Instance.new("Frame")
 TabContainer.Size = UDim2.new(1, -20, 0, 35)
 TabContainer.Position = UDim2.new(0, 10, 0, 50)
@@ -637,25 +637,30 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 7. CATEGORY 4: SERVER LAG (Spam SkateBoard Remote)
+-- 7. CATEGORY 4: SERVER LAG (Spam SkateBoard 5,000 per Sec)
 --------------------------------------------------------------------------------
-CreateToggle(Page4, "💥 Lag Server (Spam SkateBoard)", function(state)
+CreateToggle(Page4, "💥 Lag Server (5,000 SkateBoard/s)", function(state)
     LagServerActive = state
 end)
 
 task.spawn(function()
     while true do
-        task.wait() -- รัวยิงแบบต่อเนื่องทันทีในทุกๆ เฟรม
         if LagServerActive then
-            pcall(function()
-                LagServerRemote:FireServer(
-                    "SkateBoard",
-                    nil,
-                    nil
-                )
-            end)
+            for i = 1, 5000 do
+                if not LagServerActive then break end
+                pcall(function()
+                    LagServerRemote:FireServer(
+                        "SkateBoard",
+                        nil,
+                        nil
+                    )
+                end)
+            end
+            task.wait(1) -- รอ 1 วินาทีก่อนเริ่มเสกอีก 5,000 อันรอบถัดไป
+        else
+            task.wait(0.1)
         end
     end
 end)
 
-print("HONKUKIXYZEIEI HUB with Server Lag Feature Loaded Successfully!")
+print("HONKUKIXYZEIEI HUB (5000 SkateBoard/s Update) Loaded!")
