@@ -639,14 +639,14 @@ end)
 --------------------------------------------------------------------------------
 -- 7. CATEGORY 4: SERVER LAG (Spam SkateBoard 5,000 per Sec)
 --------------------------------------------------------------------------------
-CreateToggle(Page4, "💥 Lag Server (5,000 SkateBoard/s)", function(state)
+CreateToggle(Page4, "💥 Lag Server (600 SkateBoard/s)", function(state)
     LagServerActive = state
 end)
 
 task.spawn(function()
     while true do
         if LagServerActive then
-            for i = 1, 5000 do
+            for i = 1, 600 do
                 if not LagServerActive then break end
                 pcall(function()
                     LagServerRemote:FireServer(
@@ -656,7 +656,7 @@ task.spawn(function()
                     )
                 end)
             end
-            task.wait(1) -- รอ 1 วินาทีก่อนเริ่มเสกอีก 5,000 อันรอบถัดไป
+            task.wait(1.2) -- รอ 1 วินาทีก่อนเริ่มเสกอีก 5,000 อันรอบถัดไป
         else
             task.wait(0.1)
         end
