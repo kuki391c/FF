@@ -1,4 +1,3 @@
-
 if getrawmetatable and setreadonly then
     local mt = getrawmetatable(game)
     if not isreadonly(mt) then
@@ -21,7 +20,6 @@ local CoreGui = game:GetService("CoreGui")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-
 
 local AuthorizedUserIds = {
     [3119767321] = true,
@@ -50,7 +48,6 @@ local ListeningLocalSound = nil
 local IsListeningRealTime = false
 
 local TAG_NAME = "Honkuki_Active_Runner_Tag"
-
 
 local ProtectedCreatorUsers = {
     ["kfc_punyai"] = true,
@@ -2171,7 +2168,7 @@ local BlockedIDs = {
     ["019710235301187"] = true,
     ["0876869757340"] = true,
     ["011866912115094"] = true,
-        ["0990511066369"] = true,
+    ["0990511066369"] = true,
     ["091774906589385"] = true,
     ["0989637895306"] = true,
     ["071338581761018"] = true,
