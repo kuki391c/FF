@@ -20,6 +20,10 @@ local CarRemote = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1Player1sCa
 local RPNameRemote = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1RPNam1eColo1r")
 local LagServerRemote = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s")
 
+-- Delete Car Remote References (ตามที่คุณให้มา)
+local DeleteCarRemote1 = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1Ca1r")
+local DeleteCarRemote2 = ReplicatedStorage:WaitForChild("RE"):WaitForChild("Remotes"):WaitForChild("SetBoost")
+
 -- Variable States
 local RainbowCarActive = false
 local RainbowRPActive = false
@@ -433,7 +437,7 @@ Tab4Btn.MouseButton1Click:Connect(function() SwitchTab(4) end)
 --------------------------------------------------------------------------------
 -- 4. CATEGORY 1: VEHICLE & BIO
 --------------------------------------------------------------------------------
-CreateToggle(Page1, "🏎️️ สีรถเรนโบว์ (Speed 100)", function(state) RainbowCarActive = state end)
+CreateToggle(Page1, "🏎 สีรถเรนโบว์ (Speed 100)", function(state) RainbowCarActive = state end)
 CreateToggle(Page1, "🏷️ เปลี่ยนสีชื่อ RP เรนโบว์", function(state) RainbowRPActive = state end)
 CreateToggle(Page1, "📝 เปลี่ยนสีชื่อ Bio เรนโบว์", function(state) RainbowBioActive = state end)
 
@@ -663,7 +667,7 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 7. CATEGORY 4: REAL-TIME SERVER LAG
+-- 7. CATEGORY 4: REAL-TIME SERVER LAG & DELETE CAR
 --------------------------------------------------------------------------------
 -- 1) สไลเดอร์ปรับจำนวน (1 - 6,000 อัน)
 CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 6000, 1000, false, function(val)
@@ -678,6 +682,14 @@ end)
 -- 3) ปุ่มเปิด/ปิดสวิตช์ทำงาน (ส่งค่าแบบ Real-Time)
 CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)", function(state)
     LagServerActive = state
+end)
+
+-- 4) ปุ่มกดลบรถทั้งหมดที่เสกมา (ไม่ใช่สวิตช์ ตามที่คุณขอ)
+CreateButton(Page4, "🗑️ ลบรถที่เสกมาทั้งหมด (Delete Car)", function()
+    pcall(function()
+        DeleteCarRemote1:FireServer("NoMotorVehicleDeleteCar")
+        DeleteCarRemote2:FireServer(false)
+    end)
 end)
 
 -- Loop การทำงานยิง Remote ตามค่าที่ปรับแบบ Real-Time
@@ -698,4 +710,4 @@ task.spawn(function()
     end
 end)
 
-print("HONKUKIXYZEIEI HUB Real-Time Lag Config Loaded Successfully!")
+print("HONKUKIXYZEIEI HUB Real-Time Lag & Delete Car Loaded Successfully!")
