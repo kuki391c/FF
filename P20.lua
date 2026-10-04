@@ -37,7 +37,11 @@ local AntiFlingActive = false
 local AntiLagActive = false
 local SuperProtActive = false
 
-local LagServerActive = false
+-- Lag Server Vehicles Active States
+local LagSkateActive = false
+local LagHoverboardActive = false
+local LagWheelChairActive = false
+
 local SkateAmount = 1000
 local LagDelay = 1.0
 
@@ -157,7 +161,7 @@ end
 
 task.spawn(function()
     while true do
-        task.wait(0.5) -- ปรับเวลาหน่วงนิดหน่อยเพื่อประหยัดทรัพยากรเครื่อง
+        task.wait(0.5)
         if MainFrame.Visible then
             CreateShootingStar()
         end
@@ -356,7 +360,7 @@ local function CreateToggle(parent, text, callback)
     Frame.Size = UDim2.new(1, -8, 0, 38)
     Frame.BackgroundColor3 = Color3.fromRGB(40, 22, 65)
     Frame.ZIndex = 4
-    Frame.Parent = Frame and parent
+    Frame.Parent = parent
 
     Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
     local Stroke = Instance.new("UIStroke", Frame)
@@ -415,7 +419,6 @@ local function CreateToggle(parent, text, callback)
     return Frame
 end
 
--- สร้างกล่อง TextBox 3D เรืองแสงสำหรับใส่ค่าตัวเลขแทนสไลเดอร์เดิม
 local function CreateTextBoxInput(parent, titleText, defaultVal, callback)
     local BoxFrame = Instance.new("Frame")
     BoxFrame.Size = UDim2.new(1, -8, 0, 42)
@@ -529,7 +532,7 @@ CreateToggle(Page1, "📝 เปลี่ยนสีชื่อ Bio เรน�
 
 task.spawn(function()
     while true do
-        task.wait(0.05) -- ปรับดีเลย์เล็กน้อยเพื่อความลื่นไหลและไม่กินแรม
+        task.wait(0.05)
         local color = GetRainbowColor()
         if RainbowCarActive and CarRemote then pcall(function() CarRemote:FireServer("NoMotorColor", color) end) end
         if RainbowRPActive and RPNameRemote then pcall(function() RPNameRemote:FireServer("PickingRPNameColor", color) end) end
@@ -540,7 +543,6 @@ end)
 --------------------------------------------------------------------------------
 -- 11. CATEGORY 2: PLAYER FEATURES
 --------------------------------------------------------------------------------
--- เปลี่ยนช่องความเร็วผู้เล่นเป็น TextBox 3D
 CreateTextBoxInput(Page2, "⚡ ความเร็วผู้เล่น (WalkSpeed)", 16, function(val)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = val
@@ -748,26 +750,78 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 13. CATEGORY 4: REAL-TIME SERVER LAG (เปลี่ยนชื่อและช่องใส่จำนวน)
+-- 13. CATEGORY 4: REAL-TIME SERVER LAG (3 VEHICLES + REALTIME INPUTS)
 --------------------------------------------------------------------------------
+-- 1. ปุ่มเสก Skateboard
+CreateToggle(Page4, "🛹 เสก Skateboard (Real-Time)", function(state)
+    LagSkateActive = state
+end)
+
+-- 2. ปุ่มเสก Hoverboard
+CreateToggle(Page4, "🛹 เสก Hoverboard (Real-Time)", function(state)
+    LagHoverboardActive = state
+end)
+
+-- 3. ปุ่มเสก WheelChair (รถเข็น)
+CreateToggle(Page4, "♿ เสก WheelChair (Real-Time)", function(state)
+    LagWheelChairActive = state
+end)
+
+-- 4. ช่องปรับจำนวนครั้ง
 CreateTextBoxInput(Page4, "💥 จำนวนครั้งยิงเซิฟแลค", 1000, function(val)
     SkateAmount = val
 end)
 
+-- 5. ช่องปรับเวลาหน่วง
 CreateTextBoxInput(Page4, "⏱️ เวลาหน่วง (วินาที)", 1.0, function(val)
     LagDelay = val
 end)
 
-CreateToggle(Page4, "🔥 เปิดสวิตช์ทำให้เซิฟแลค (Real-Time)", function(state) LagServerActive = state end)
-
+-- Loop ยิง Skateboard
 task.spawn(function()
     while true do
-        if LagServerActive and LagServerRemote then
+        if LagSkateActive and LagServerRemote then
             local currentAmount = SkateAmount
             for i = 1, currentAmount do
-                if not LagServerActive then break end
+                if not LagSkateActive then break end
                 pcall(function()
                     LagServerRemote:FireServer("SkateBoard", nil, nil)
+                end)
+            end
+            task.wait(LagDelay)
+        else
+            task.wait(0.1)
+        end
+    end
+end)
+
+-- Loop ยิง Hoverboard
+task.spawn(function()
+    while true do
+        if LagHoverboardActive and LagServerRemote then
+            local currentAmount = SkateAmount
+            for i = 1, currentAmount do
+                if not LagHoverboardActive then break end
+                pcall(function()
+                    LagServerRemote:FireServer("SegwaySmall", nil, nil)
+                end)
+            end
+            task.wait(LagDelay)
+        else
+            task.wait(0.1)
+        end
+    end
+end)
+
+-- Loop ยิง WheelChair
+task.spawn(function()
+    while true do
+        if LagWheelChairActive and LagServerRemote then
+            local currentAmount = SkateAmount
+            for i = 1, currentAmount do
+                if not LagWheelChairActive then break end
+                pcall(function()
+                    LagServerRemote:FireServer("WheelChair", nil, nil)
                 end)
             end
             task.wait(LagDelay)
