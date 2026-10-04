@@ -15,14 +15,15 @@ local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Remote References
-local CarRemote = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1Player1sCa1r")
-local RPNameRemote = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1RPNam1eColo1r")
-local LagServerRemote = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1NoMoto1rVehicle1s")
+-- Safely Fetch Remotes without freezing the script
+local RE = ReplicatedStorage:WaitForChild("RE", 5)
+local CarRemote = RE and RE:FindFirstChild("1Player1sCa1r")
+local RPNameRemote = RE and RE:FindFirstChild("1RPNam1eColo1r")
+local LagServerRemote = RE and RE:FindFirstChild("1NoMoto1rVehicle1s")
+local DeleteCarRemote1 = RE and RE:FindFirstChild("1Ca1r")
 
--- Delete Car Remote References (ตามที่คุณให้มา)
-local DeleteCarRemote1 = ReplicatedStorage:WaitForChild("RE"):WaitForChild("1Ca1r")
-local DeleteCarRemote2 = ReplicatedStorage:WaitForChild("RE"):WaitForChild("Remotes"):WaitForChild("SetBoost")
+local RemotesFolder = RE and RE:FindFirstChild("Remotes")
+local DeleteCarRemote2 = RemotesFolder and RemotesFolder:FindFirstChild("SetBoost")
 
 -- Variable States
 local RainbowCarActive = false
@@ -49,8 +50,8 @@ local LagDelay = 1.0     -- ค่าเริ่มต้นดีเลย์ 
 local RainbowSpeed = 100 -- ค่าความไวเปลี่ยนสี
 
 local function GetRainbowColor()
-    local t = tick() * (RainbowSpeed / 10)
-    return Color3.fromHSV(t % 1, 1, 1)
+    local t = (tick() * (RainbowSpeed / 10)) % 1
+    return Color3.fromHSV(math.abs(t), 1, 1)
 end
 
 --------------------------------------------------------------------------------
@@ -445,9 +446,9 @@ task.spawn(function()
     while true do
         task.wait(0.01)
         local color = GetRainbowColor()
-        if RainbowCarActive then pcall(function() CarRemote:FireServer("NoMotorColor", color) end) end
-        if RainbowRPActive then pcall(function() RPNameRemote:FireServer("PickingRPNameColor", color) end) end
-        if RainbowBioActive then pcall(function() RPNameRemote:FireServer("PickingRPBioColor", color) end) end
+        if RainbowCarActive and CarRemote then pcall(function() CarRemote:FireServer("NoMotorColor", color) end) end
+        if RainbowRPActive and RPNameRemote then pcall(function() RPNameRemote:FireServer("PickingRPNameColor", color) end) end
+        if RainbowBioActive and RPNameRemote then pcall(function() RPNameRemote:FireServer("PickingRPBioColor", color) end) end
     end
 end)
 
@@ -684,18 +685,18 @@ CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)"
     LagServerActive = state
 end)
 
--- 4) ปุ่มกดลบรถทั้งหมดที่เสกมา (ไม่ใช่สวิตช์ ตามที่คุณขอ)
+-- 4) ปุ่มกดลบรถทั้งหมดที่เสกมา
 CreateButton(Page4, "🗑️ ลบรถที่เสกมาทั้งหมด (Delete Car)", function()
     pcall(function()
-        DeleteCarRemote1:FireServer("NoMotorVehicleDeleteCar")
-        DeleteCarRemote2:FireServer(false)
+        if DeleteCarRemote1 then DeleteCarRemote1:FireServer("NoMotorVehicleDeleteCar") end
+        if DeleteCarRemote2 then DeleteCarRemote2:FireServer(false) end
     end)
 end)
 
 -- Loop การทำงานยิง Remote ตามค่าที่ปรับแบบ Real-Time
 task.spawn(function()
     while true do
-        if LagServerActive then
+        if LagServerActive and LagServerRemote then
             local currentAmount = SkateAmount
             for i = 1, currentAmount do
                 if not LagServerActive then break end
@@ -703,7 +704,7 @@ task.spawn(function()
                     LagServerRemote:FireServer("SkateBoard", nil, nil)
                 end)
             end
-            task.wait(LagDelay) -- ใช้เวลาหน่วงที่ผู้ใช้ลากปรับ Real-Time
+            task.wait(LagDelay)
         else
             task.wait(0.1)
         end
