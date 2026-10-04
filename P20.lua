@@ -70,7 +70,7 @@ BlurEffect.Size = 0
 BlurEffect.Parent = Lighting
 
 --------------------------------------------------------------------------------
--- 2. FLOATING TOGGLE BUTTON (CIRCLE BLACK THEME)
+-- 2. FLOATING TOGGLE BUTTON (3D GLOW THEME)
 --------------------------------------------------------------------------------
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
@@ -89,18 +89,18 @@ local UICornerBtn = Instance.new("UICorner", ToggleButton)
 UICornerBtn.CornerRadius = UDim.new(1, 0)
 
 local UIStrokeBtn = Instance.new("UIStroke", ToggleButton)
-UIStrokeBtn.Color = Color3.fromRGB(110, 50, 180)
-UIStrokeBtn.Thickness = 2.5
+UIStrokeBtn.Color = Color3.fromRGB(160, 80, 255)
+UIStrokeBtn.Thickness = 3
 
 --------------------------------------------------------------------------------
--- 3. MAIN FRAME (RESPONSIVE & ROUNDED)
+-- 3. MAIN FRAME (3D SHADOW & BORDER)
 --------------------------------------------------------------------------------
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 520, 0, 360)
 MainFrame.Position = UDim2.new(0.5, -260, 0.5, -180)
 MainFrame.BackgroundColor3 = Color3.fromRGB(16, 10, 26)
-MainFrame.BackgroundTransparency = 0.1
+MainFrame.BackgroundTransparency = 0.05
 MainFrame.ClipsDescendants = true
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -111,11 +111,17 @@ local UICornerMain = Instance.new("UICorner", MainFrame)
 UICornerMain.CornerRadius = UDim.new(0, 20)
 
 local UIStrokeMain = Instance.new("UIStroke", MainFrame)
-UIStrokeMain.Color = Color3.fromRGB(130, 60, 220)
-UIStrokeMain.Thickness = 2
+UIStrokeMain.Color = Color3.fromRGB(150, 70, 255)
+UIStrokeMain.Thickness = 2.5
+
+-- 3D Inner Shadow / Glow Effect
+local MainShadow = Instance.new("UIStroke", MainFrame)
+MainShadow.Color = Color3.fromRGB(80, 20, 140)
+MainShadow.Thickness = 5
+MainShadow.Transparency = 0.5
 
 --------------------------------------------------------------------------------
--- 4. BACKGROUND SHOOTING STARS (PURPLE-WHITE GLOW)
+-- 4. BACKGROUND SHOOTING STARS
 --------------------------------------------------------------------------------
 local StarCanvas = Instance.new("Frame")
 StarCanvas.Name = "StarCanvas"
@@ -135,8 +141,7 @@ local function CreateShootingStar()
     star.ZIndex = 1
     star.Parent = StarCanvas
 
-    local corner = Instance.new("UICorner", star)
-    corner.CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
 
     local targetPos = UDim2.new(star.Position.X.Scale + 0.4, 0, star.Position.Y.Scale + 0.4, 0)
     local duration = math.random(12, 22) / 10
@@ -152,7 +157,7 @@ end
 
 task.spawn(function()
     while true do
-        task.wait(0.35)
+        task.wait(0.5) -- ปรับเวลาหน่วงนิดหน่อยเพื่อประหยัดทรัพยากรเครื่อง
         if MainFrame.Visible then
             CreateShootingStar()
         end
@@ -160,19 +165,17 @@ task.spawn(function()
 end)
 
 --------------------------------------------------------------------------------
--- 5. HEADER (CREDIT & DYNAMIC MAP INFO)
+-- 5. HEADER
 --------------------------------------------------------------------------------
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 55)
 Header.BackgroundColor3 = Color3.fromRGB(24, 14, 38)
-Header.BackgroundTransparency = 0.2
+Header.BackgroundTransparency = 0.1
 Header.ZIndex = 2
 Header.Parent = MainFrame
 
-local UICornerHeader = Instance.new("UICorner", Header)
-UICornerHeader.CornerRadius = UDim.new(0, 20)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 20)
 
--- Credit Title Left
 local TitleText = Instance.new("TextLabel")
 TitleText.Size = UDim2.new(0, 180, 1, 0)
 TitleText.Position = UDim2.new(0, 16, 0, 0)
@@ -185,7 +188,7 @@ TitleText.BackgroundTransparency = 1
 TitleText.ZIndex = 3
 TitleText.Parent = Header
 
--- Map Info Container (Center)
+-- Map Info Container
 local MapContainer = Instance.new("Frame")
 MapContainer.Size = UDim2.new(0, 190, 0, 36)
 MapContainer.Position = UDim2.new(0.5, -95, 0.5, -18)
@@ -194,12 +197,10 @@ MapContainer.BackgroundTransparency = 0.3
 MapContainer.ZIndex = 3
 MapContainer.Parent = Header
 
-local MapCorner = Instance.new("UICorner", MapContainer)
-MapCorner.CornerRadius = UDim.new(0, 12)
-
+Instance.new("UICorner", MapContainer).CornerRadius = UDim.new(0, 12)
 local MapStroke = Instance.new("UIStroke", MapContainer)
-MapStroke.Color = Color3.fromRGB(90, 45, 140)
-MapStroke.Thickness = 1
+MapStroke.Color = Color3.fromRGB(110, 50, 170)
+MapStroke.Thickness = 1.5
 
 local MapImage = Instance.new("ImageLabel")
 MapImage.Size = UDim2.new(0, 26, 0, 26)
@@ -222,7 +223,6 @@ MapNameLabel.BackgroundTransparency = 1
 MapNameLabel.ZIndex = 4
 MapNameLabel.Parent = MapContainer
 
--- Fetch Map Data
 task.spawn(function()
     local placeId = game.PlaceId
     local success, info = pcall(function()
@@ -237,7 +237,6 @@ task.spawn(function()
     end
 end)
 
--- Close Button
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 32, 0, 32)
 CloseBtn.Position = UDim2.new(1, -42, 0, 11)
@@ -250,7 +249,7 @@ CloseBtn.ZIndex = 3
 CloseBtn.Parent = Header
 
 --------------------------------------------------------------------------------
--- 6. SIDEBAR NAVIGATION (LEFT CATEGORIES)
+-- 6. SIDEBAR NAVIGATION
 --------------------------------------------------------------------------------
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 130, 1, -65)
@@ -260,8 +259,7 @@ Sidebar.BackgroundTransparency = 0.3
 Sidebar.ZIndex = 2
 Sidebar.Parent = MainFrame
 
-local UICornerSidebar = Instance.new("UICorner", Sidebar)
-UICornerSidebar.CornerRadius = UDim.new(0, 14)
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 14)
 
 local SidebarLayout = Instance.new("UIListLayout", Sidebar)
 SidebarLayout.Padding = UDim.new(0, 6)
@@ -271,7 +269,6 @@ SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 local SidebarPadding = Instance.new("UIPadding", Sidebar)
 SidebarPadding.PaddingTop = UDim.new(0, 8)
 
--- Tab Buttons
 local function CreateTabBtn(text, order)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0, 114, 0, 38)
@@ -279,12 +276,15 @@ local function CreateTabBtn(text, order)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 11
     btn.TextColor3 = (order == 1) and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(170, 160, 190)
-    btn.BackgroundColor3 = (order == 1) and Color3.fromRGB(120, 50, 200) or Color3.fromRGB(32, 18, 50)
+    btn.BackgroundColor3 = (order == 1) and Color3.fromRGB(130, 50, 220) or Color3.fromRGB(32, 18, 50)
     btn.LayoutOrder = order
     btn.ZIndex = 3
     btn.Parent = Sidebar
     
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(170, 90, 255)
+    stroke.Thickness = (order == 1) and 1.5 or 0.8
     return btn
 end
 
@@ -294,7 +294,7 @@ local Tab3Btn = CreateTabBtn("🛡️ Protect", 3)
 local Tab4Btn = CreateTabBtn("⚡ Lag Server", 4)
 
 --------------------------------------------------------------------------------
--- 7. PAGES CONTAINER (RIGHT CONTENT)
+-- 7. PAGES CONTAINER
 --------------------------------------------------------------------------------
 local ContentArea = Instance.new("Frame")
 ContentArea.Size = UDim2.new(1, -160, 1, -65)
@@ -308,7 +308,7 @@ local function CreatePage()
     page.Size = UDim2.new(1, 0, 1, 0)
     page.BackgroundTransparency = 1
     page.ScrollBarThickness = 3
-    page.ScrollBarImageColor3 = Color3.fromRGB(150, 70, 230)
+    page.ScrollBarImageColor3 = Color3.fromRGB(170, 80, 255)
     page.ZIndex = 3
     page.Parent = ContentArea
     
@@ -329,12 +329,12 @@ Page3.Visible = false
 Page4.Visible = false
 
 --------------------------------------------------------------------------------
--- 8. HELPER UI CREATORS (MODERNIZED)
+-- 8. 3D UI CREATORS (GLOW & MODERN)
 --------------------------------------------------------------------------------
 local function CreateButton(parent, text, callback)
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, -8, 0, 38)
-    Btn.BackgroundColor3 = Color3.fromRGB(40, 22, 65)
+    Btn.BackgroundColor3 = Color3.fromRGB(45, 24, 75)
     Btn.Text = text
     Btn.Font = Enum.Font.GothamMedium
     Btn.TextSize = 12
@@ -344,8 +344,8 @@ local function CreateButton(parent, text, callback)
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 10)
     local UIStroke = Instance.new("UIStroke", Btn)
-    UIStroke.Color = Color3.fromRGB(90, 45, 150)
-    UIStroke.Thickness = 1
+    UIStroke.Color = Color3.fromRGB(150, 70, 240)
+    UIStroke.Thickness = 1.5
 
     Btn.MouseButton1Click:Connect(callback)
     return Btn
@@ -356,9 +356,12 @@ local function CreateToggle(parent, text, callback)
     Frame.Size = UDim2.new(1, -8, 0, 38)
     Frame.BackgroundColor3 = Color3.fromRGB(40, 22, 65)
     Frame.ZIndex = 4
-    Frame.Parent = parent
+    Frame.Parent = Frame and parent
 
     Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke", Frame)
+    Stroke.Color = Color3.fromRGB(110, 50, 190)
+    Stroke.Thickness = 1
 
     local Label = Instance.new("TextLabel")
     Label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -401,8 +404,8 @@ local function CreateToggle(parent, text, callback)
     ClickBtn.MouseButton1Click:Connect(function()
         toggled = not toggled
         if toggled then
-            TweenService:Create(SwitchKnob, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0.5, -8), BackgroundColor3 = Color3.fromRGB(200, 100, 255)}):Play()
-            TweenService:Create(SwitchBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 45, 160)}):Play()
+            TweenService:Create(SwitchKnob, TweenInfo.new(0.2), {Position = UDim2.new(1, -18, 0.5, -8), BackgroundColor3 = Color3.fromRGB(220, 120, 255)}):Play()
+            TweenService:Create(SwitchBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(130, 50, 210)}):Play()
         else
             TweenService:Create(SwitchKnob, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -8), BackgroundColor3 = Color3.fromRGB(170, 170, 190)}):Play()
             TweenService:Create(SwitchBg, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 15, 35)}):Play()
@@ -412,82 +415,62 @@ local function CreateToggle(parent, text, callback)
     return Frame
 end
 
-local function CreateSlider(parent, titleText, minVal, maxVal, defaultVal, isFloat, callback)
-    local SliderFrame = Instance.new("Frame")
-    SliderFrame.Size = UDim2.new(1, -8, 0, 52)
-    SliderFrame.BackgroundColor3 = Color3.fromRGB(40, 22, 65)
-    SliderFrame.ZIndex = 4
-    SliderFrame.Parent = parent
-    Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 10)
+-- สร้างกล่อง TextBox 3D เรืองแสงสำหรับใส่ค่าตัวเลขแทนสไลเดอร์เดิม
+local function CreateTextBoxInput(parent, titleText, defaultVal, callback)
+    local BoxFrame = Instance.new("Frame")
+    BoxFrame.Size = UDim2.new(1, -8, 0, 42)
+    BoxFrame.BackgroundColor3 = Color3.fromRGB(42, 22, 68)
+    BoxFrame.ZIndex = 4
+    BoxFrame.Parent = parent
+    
+    Instance.new("UICorner", BoxFrame).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke", BoxFrame)
+    Stroke.Color = Color3.fromRGB(150, 70, 240)
+    Stroke.Thickness = 1.2
 
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, -20, 0, 20)
-    TitleLabel.Position = UDim2.new(0, 10, 0, 4)
+    TitleLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
     TitleLabel.Font = Enum.Font.GothamMedium
     TitleLabel.TextSize = 11
     TitleLabel.TextColor3 = Color3.fromRGB(240, 230, 255)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.ZIndex = 5
-    TitleLabel.Parent = SliderFrame
+    TitleLabel.Text = titleText
+    TitleLabel.Parent = BoxFrame
 
-    local SliderBg = Instance.new("Frame")
-    SliderBg.Size = UDim2.new(1, -20, 0, 8)
-    SliderBg.Position = UDim2.new(0, 10, 0, 30)
-    SliderBg.BackgroundColor3 = Color3.fromRGB(22, 12, 32)
-    SliderBg.ZIndex = 5
-    SliderBg.Parent = SliderFrame
-    Instance.new("UICorner", SliderBg).CornerRadius = UDim.new(1, 0)
+    local TextBox = Instance.new("TextBox")
+    TextBox.Size = UDim2.new(0, 90, 0, 26)
+    TextBox.Position = UDim2.new(1, -98, 0.5, -13)
+    TextBox.BackgroundColor3 = Color3.fromRGB(20, 10, 32)
+    TextBox.Text = tostring(defaultVal)
+    TextBox.Font = Enum.Font.GothamBold
+    TextBox.TextSize = 11
+    TextBox.TextColor3 = Color3.fromRGB(255, 180, 255)
+    TextBox.ClearTextOnFocus = false
+    TextBox.ZIndex = 5
+    TextBox.Parent = BoxFrame
 
-    local SliderFill = Instance.new("Frame")
-    local startPos = math.clamp((defaultVal - minVal) / (maxVal - minVal), 0, 1)
-    SliderFill.Size = UDim2.new(startPos, 0, 1, 0)
-    SliderFill.BackgroundColor3 = Color3.fromRGB(170, 70, 255)
-    SliderFill.ZIndex = 6
-    SliderFill.Parent = SliderBg
-    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", TextBox).CornerRadius = UDim.new(0, 6)
+    local BoxStroke = Instance.new("UIStroke", TextBox)
+    BoxStroke.Color = Color3.fromRGB(180, 90, 255)
+    BoxStroke.Thickness = 1.5
 
-    local function UpdateText(val)
-        if isFloat then
-            TitleLabel.Text = string.format("%s: %.1f", titleText, val)
+    TextBox.FocusLost:Connect(function(enterPressed)
+        local num = tonumber(TextBox.Text)
+        if num then
+            callback(num)
         else
-            TitleLabel.Text = string.format("%s: %d", titleText, math.floor(val))
-        end
-    end
-    UpdateText(defaultVal)
-
-    local dragging = false
-    local function ProcessInput(input)
-        local pos = math.clamp((input.Position.X - SliderBg.AbsolutePosition.X) / SliderBg.AbsoluteSize.X, 0, 1)
-        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
-        local currentVal = minVal + (pos * (maxVal - minVal))
-        if not isFloat then currentVal = math.floor(currentVal) end
-        UpdateText(currentVal)
-        callback(currentVal)
-    end
-
-    SliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            ProcessInput(input)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            ProcessInput(input)
+            TextBox.Text = tostring(defaultVal)
         end
     end)
 
-    return SliderFrame
+    return BoxFrame
 end
 
 --------------------------------------------------------------------------------
--- 9. SMOOTH UI TOGGLE & TAB SWITCHING
+-- 9. UI TOGGLE & TAB SWITCHING LOGIC
 --------------------------------------------------------------------------------
 local isOpen = true
 local originalSize = UDim2.new(0, 520, 0, 360)
@@ -519,12 +502,15 @@ local function SwitchTab(activeTab)
 
     local tabs = {Tab1Btn, Tab2Btn, Tab3Btn, Tab4Btn}
     for i, tab in ipairs(tabs) do
+        local stroke = tab:FindFirstChildOfClass("UIStroke")
         if i == activeTab then
-            tab.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
+            tab.BackgroundColor3 = Color3.fromRGB(130, 50, 220)
             tab.TextColor3 = Color3.fromRGB(255, 255, 255)
+            if stroke then stroke.Thickness = 1.5 end
         else
             tab.BackgroundColor3 = Color3.fromRGB(32, 18, 50)
             tab.TextColor3 = Color3.fromRGB(170, 160, 190)
+            if stroke then stroke.Thickness = 0.8 end
         end
     end
 end
@@ -543,7 +529,7 @@ CreateToggle(Page1, "📝 เปลี่ยนสีชื่อ Bio เรน�
 
 task.spawn(function()
     while true do
-        task.wait(0.01)
+        task.wait(0.05) -- ปรับดีเลย์เล็กน้อยเพื่อความลื่นไหลและไม่กินแรม
         local color = GetRainbowColor()
         if RainbowCarActive and CarRemote then pcall(function() CarRemote:FireServer("NoMotorColor", color) end) end
         if RainbowRPActive and RPNameRemote then pcall(function() RPNameRemote:FireServer("PickingRPNameColor", color) end) end
@@ -554,7 +540,8 @@ end)
 --------------------------------------------------------------------------------
 -- 11. CATEGORY 2: PLAYER FEATURES
 --------------------------------------------------------------------------------
-CreateSlider(Page2, "⚡ ความเร็วผู้เล่น", 16, 1000, 16, false, function(val)
+-- เปลี่ยนช่องความเร็วผู้เล่นเป็น TextBox 3D
+CreateTextBoxInput(Page2, "⚡ ความเร็วผู้เล่น (WalkSpeed)", 16, function(val)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
         LocalPlayer.Character.Humanoid.WalkSpeed = val
     end
@@ -566,6 +553,7 @@ SelectFrame.BackgroundColor3 = Color3.fromRGB(40, 22, 65)
 SelectFrame.ZIndex = 4
 SelectFrame.Parent = Page2
 Instance.new("UICorner", SelectFrame).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", SelectFrame).Color = Color3.fromRGB(120, 50, 200)
 
 local SelectedText = Instance.new("TextLabel")
 SelectedText.Size = UDim2.new(1, -110, 1, 0)
@@ -582,7 +570,7 @@ SelectedText.Parent = SelectFrame
 local RefreshBtn = Instance.new("TextButton")
 RefreshBtn.Size = UDim2.new(0, 90, 0, 28)
 RefreshBtn.Position = UDim2.new(1, -95, 0.5, -14)
-RefreshBtn.BackgroundColor3 = Color3.fromRGB(90, 40, 150)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(100, 45, 170)
 RefreshBtn.Text = "🔄 Refresh"
 RefreshBtn.Font = Enum.Font.GothamBold
 RefreshBtn.TextSize = 10
@@ -590,6 +578,7 @@ RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 RefreshBtn.ZIndex = 5
 RefreshBtn.Parent = SelectFrame
 Instance.new("UICorner", RefreshBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", RefreshBtn).Color = Color3.fromRGB(180, 100, 255)
 
 local PlayerListFrame = Instance.new("ScrollingFrame")
 PlayerListFrame.Size = UDim2.new(0, 220, 0, 160)
@@ -645,7 +634,7 @@ CreateToggle(Page2, "🧲 วาร์ปติดตัวตลอดเวล
 
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        task.wait(0.15)
         if LoopTPActive and SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -2)
@@ -741,7 +730,6 @@ task.spawn(function()
                         v.Enabled = false
                     end
                 end
-                gcinfo()
             end)
         end
     end
@@ -760,12 +748,17 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 13. CATEGORY 4: REAL-TIME SERVER LAG
+-- 13. CATEGORY 4: REAL-TIME SERVER LAG (เปลี่ยนชื่อและช่องใส่จำนวน)
 --------------------------------------------------------------------------------
-CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 100000000, 1000, false, function(val) SkateAmount = val end)
-CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.00000000001, 3.0, 1.0, true, function(val) LagDelay = val end)
+CreateTextBoxInput(Page4, "💥 จำนวนครั้งยิงเซิฟแลค", 1000, function(val)
+    SkateAmount = val
+end)
 
-CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)", function(state) LagServerActive = state end)
+CreateTextBoxInput(Page4, "⏱️ เวลาหน่วง (วินาที)", 1.0, function(val)
+    LagDelay = val
+end)
+
+CreateToggle(Page4, "🔥 เปิดสวิตช์ทำให้เซิฟแลค (Real-Time)", function(state) LagServerActive = state end)
 
 task.spawn(function()
     while true do
@@ -784,4 +777,4 @@ task.spawn(function()
     end
 end)
 
-print("HONKUKIXYZEIEI HUB V2 - Loaded Successfully!")
+print("HONKUKIXYZEIEI HUB V2 ULTIMATE - Loaded Successfully!")
