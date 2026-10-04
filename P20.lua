@@ -671,17 +671,17 @@ end)
 -- 7. CATEGORY 4: REAL-TIME SERVER LAG & DELETE CAR
 --------------------------------------------------------------------------------
 -- 1) สไลเดอร์ปรับจำนวน (1 - 6,000 อัน)
-CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 6000, 1000, false, function(val)
+CreateSlider(Page4, "จำนวนเสกสเก็ตบอร์ด", 1, 100000, 1000, false, function(val)
     SkateAmount = val
 end)
 
 -- 2) สไลเดอร์ปรับเวลาหน่วงดีเลย์ (0.1 - 3.0 วินาที)
-CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.1, 3.0, 1.0, true, function(val)
+CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.1, 5.0, 1.0, true, function(val)
     LagDelay = val
 end)
 
 -- 3) ปุ่มเปิด/ปิดสวิตช์ทำงาน (ส่งค่าแบบ Real-Time)
-CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)", function(state)
+CreateToggle(Page4, "💥 เปิดปิง์(Real-Time)", function(state)
     LagServerActive = state
 end)
 
