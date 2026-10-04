@@ -762,8 +762,8 @@ end)
 --------------------------------------------------------------------------------
 -- 13. CATEGORY 4: REAL-TIME SERVER LAG
 --------------------------------------------------------------------------------
-CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 6000, 1000, false, function(val) SkateAmount = val end)
-CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.1, 3.0, 1.0, true, function(val) LagDelay = val end)
+CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 100000000, 1000, false, function(val) SkateAmount = val end)
+CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.00000000001, 3.0, 1.0, true, function(val) LagDelay = val end)
 
 CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)", function(state) LagServerActive = state end)
 
