@@ -44,7 +44,7 @@ local SuperProtActive = false
 
 -- Category 4 States (Server Lag Real-Time Config)
 local LagServerActive = false
-local HideMySkateActive = false -- สวิตช์ซ่อนสเก็ตบอร์ดเฉพาะเรา
+local AutoDestroySkateActive = false -- สวิตช์ลบสเก็ตบอร์ดถี่ๆ เฉพาะเครื่องเรา
 local SkateAmount = 1000 -- ค่าเริ่มต้นจำนวนสเก็ตบอร์ด (1 - 6000)
 local LagDelay = 1.0     -- ค่าเริ่มต้นดีเลย์ (0.1 - 3.0 วินาที)
 
@@ -158,7 +158,7 @@ TabContainer.Parent = MainFrame
 local Tab1Btn = Instance.new("TextButton")
 Tab1Btn.Size = UDim2.new(0.23, 0, 1, 0)
 Tab1Btn.Position = UDim2.new(0, 0, 0, 0)
-Tab1Btn.Text = "🚗 Vehicle"
+Tab1Btn.Text = "🏎️ Vehicle"
 Tab1Btn.Font = Enum.Font.GothamBold
 Tab1Btn.TextSize = 10
 Tab1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -440,7 +440,7 @@ Tab4Btn.MouseButton1Click:Connect(function() SwitchTab(4) end)
 --------------------------------------------------------------------------------
 -- 4. CATEGORY 1: VEHICLE & BIO
 --------------------------------------------------------------------------------
-CreateToggle(Page1, "🏎 สีรถเรนโบว์ (Speed 100)", function(state) RainbowCarActive = state end)
+CreateToggle(Page1, "🏎️ สีรถเรนโบว์ (Speed 100)", function(state) RainbowCarActive = state end)
 CreateToggle(Page1, "🏷️ เปลี่ยนสีชื่อ RP เรนโบว์", function(state) RainbowRPActive = state end)
 CreateToggle(Page1, "📝 เปลี่ยนสีชื่อ Bio เรนโบว์", function(state) RainbowBioActive = state end)
 
@@ -670,60 +670,41 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 7. CATEGORY 4: REAL-TIME SERVER LAG & DELETE CAR & HIDE SKATE
+-- 7. CATEGORY 4: REAL-TIME SERVER LAG & AUTO DESTROY SKATE (0.1s CLEAR)
 --------------------------------------------------------------------------------
--- 1) สลับเปิด-ปิดซ่อนสเก็ตบอร์ดเฉพาะเครื่องเรา (แก้แลคเวลาเสก)
-CreateToggle(Page4, "👻 ซ่อนสเก็ตบอร์ดเฉพาะตัวเรา (Anti-Lag Skate)", function(state)
-    HideMySkateActive = state
+-- 1) สลับเปิด-ปิด ลบสเก็ตบอร์ดทิ้งถี่ๆ ทุกๆ 0.1 วินาที (เฉพาะเครื่องเรา)
+CreateToggle(Page4, "🗑️ Auto Clear Skate 0.1s (เครื่องลื่น)", function(state)
+    AutoDestroySkateActive = state
 end)
 
--- ฟังก์ชันตรวจสอบและซ่อนสเก็ตบอร์ดเฉพาะเครื่องเรา
-local function CheckAndHideSkate(obj)
-    if not HideMySkateActive then return end
-    pcall(function()
-        -- ตรวจสอบว่าโมเดลหรือชื่อวัตถุเกี่ยวข้องกับ SkateBoard หรือไม่
-        if obj.Name == "SkateBoard" or obj.Name:match("Skate") then
-            for _, child in pairs(obj:GetDescendants()) do
-                if child:IsA("BasePart") then
-                    child.LocalTransparencyModifier = 1
-                elseif child:IsA("ParticleEmitter") or child:IsA("Trail") or child:IsA("Beam") then
-                    child.Enabled = false
-                end
-            end
-        end
-    end)
-end
-
--- ดักจับสเก็ตบอร์ดที่ถูกเพิ่มเข้ามาใน Workspace แบบ Real-Time
-Workspace.ChildAdded:Connect(function(child)
-    CheckAndHideSkate(child)
-end)
-
--- เผื่อกรณีสเก็ตบอร์ดอยู่ในโฟลเดอร์อื่น ให้คอยกวาดเช็คด้วย
+-- ลูปกวาดลบสเก็ตบอร์ดออกจากเครื่องเราทุกๆ 0.1 วินาทีแบบไม่จำกัดจำนวน
 task.spawn(function()
     while true do
-        task.wait(0.5)
-        if HideMySkateActive then
+        task.wait(0.1)
+        if AutoDestroySkateActive then
             pcall(function()
+                -- กวาดลบวัตถุใน Workspace ทั้งหมดที่เข้าข่าย SkateBoard
                 for _, obj in pairs(Workspace:GetChildren()) do
-                    CheckAndHideSkate(obj)
+                    if obj.Name == "SkateBoard" or obj.Name:find("Skate") or obj.Name:find("Skateboard") then
+                        obj:Destroy()
+                    end
                 end
             end)
         end
     end
 end)
 
--- 2) สไลเดอร์ปรับจำนวน (1 - 6,000 อัน)
+-- 2) สไลเดอร์ปรับจำนวนสเก็ตบอร์ดที่จะเสกส่งไปเซิร์ฟเวอร์ (1 - 6,000 อัน)
 CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 6000, 1000, false, function(val)
     SkateAmount = val
 end)
 
--- 3) สไลเดอร์ปรับเวลาหน่วงดีเลย์ (0.1 - 3.0 วินาที)
+-- 3) สไลเดอร์ปรับเวลาหน่วงดีเลย์การเสก (0.1 - 3.0 วินาที)
 CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.1, 3.0, 1.0, true, function(val)
     LagDelay = val
 end)
 
--- 4) ปุ่มเปิด/ปิดสวิตช์ทำงาน (ส่งค่าแบบ Real-Time)
+-- 4) ปุ่มเปิด/ปิดสวิตช์ Lag Server
 CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)", function(state)
     LagServerActive = state
 end)
@@ -736,7 +717,7 @@ CreateButton(Page4, "🗑️ ลบรถที่เสกมาทั้งห
     end)
 end)
 
--- Loop การทำงานยิง Remote ตามค่าที่ปรับแบบ Real-Time
+-- Loop ยิง Remote เสกสเก็ตบอร์ดไปป่วนเซิร์ฟเวอร์
 task.spawn(function()
     while true do
         if LagServerActive and LagServerRemote then
@@ -754,4 +735,4 @@ task.spawn(function()
     end
 end)
 
-print("HONKUKIXYZEIEI HUB Real-Time Lag & Hide Skate Loaded Successfully!")
+print("HONKUKIXYZEIEI HUB Real-Time Lag & Fast Auto Clear Skate Loaded!")
