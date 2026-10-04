@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -43,6 +44,7 @@ local SuperProtActive = false
 
 -- Category 4 States (Server Lag Real-Time Config)
 local LagServerActive = false
+local HideMySkateActive = false -- สวิตช์ซ่อนสเก็ตบอร์ดเฉพาะเรา
 local SkateAmount = 1000 -- ค่าเริ่มต้นจำนวนสเก็ตบอร์ด (1 - 6000)
 local LagDelay = 1.0     -- ค่าเริ่มต้นดีเลย์ (0.1 - 3.0 วินาที)
 
@@ -642,7 +644,7 @@ task.spawn(function()
         task.wait(30)
         if AntiLagActive then
             pcall(function()
-                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
+                for _, v in pairs(Workspace:GetDescendants()) do
                     if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") then
                         v.Enabled = false
                     end
@@ -668,24 +670,65 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 7. CATEGORY 4: REAL-TIME SERVER LAG & DELETE CAR
+-- 7. CATEGORY 4: REAL-TIME SERVER LAG & DELETE CAR & HIDE SKATE
 --------------------------------------------------------------------------------
--- 1) สไลเดอร์ปรับจำนวน (1 - 6,000 อัน)
-CreateSlider(Page4, "จำนวนเสกสเก็ตบอร์ด", 1, 100000, 1000, false, function(val)
+-- 1) สลับเปิด-ปิดซ่อนสเก็ตบอร์ดเฉพาะเครื่องเรา (แก้แลคเวลาเสก)
+CreateToggle(Page4, "👻 ซ่อนสเก็ตบอร์ดเฉพาะตัวเรา (Anti-Lag Skate)", function(state)
+    HideMySkateActive = state
+end)
+
+-- ฟังก์ชันตรวจสอบและซ่อนสเก็ตบอร์ดเฉพาะเครื่องเรา
+local function CheckAndHideSkate(obj)
+    if not HideMySkateActive then return end
+    pcall(function()
+        -- ตรวจสอบว่าโมเดลหรือชื่อวัตถุเกี่ยวข้องกับ SkateBoard หรือไม่
+        if obj.Name == "SkateBoard" or obj.Name:match("Skate") then
+            for _, child in pairs(obj:GetDescendants()) do
+                if child:IsA("BasePart") then
+                    child.LocalTransparencyModifier = 1
+                elseif child:IsA("ParticleEmitter") or child:IsA("Trail") or child:IsA("Beam") then
+                    child.Enabled = false
+                end
+            end
+        end
+    end)
+end
+
+-- ดักจับสเก็ตบอร์ดที่ถูกเพิ่มเข้ามาใน Workspace แบบ Real-Time
+Workspace.ChildAdded:Connect(function(child)
+    CheckAndHideSkate(child)
+end)
+
+-- เผื่อกรณีสเก็ตบอร์ดอยู่ในโฟลเดอร์อื่น ให้คอยกวาดเช็คด้วย
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if HideMySkateActive then
+            pcall(function()
+                for _, obj in pairs(Workspace:GetChildren()) do
+                    CheckAndHideSkate(obj)
+                end
+            end)
+        end
+    end
+end)
+
+-- 2) สไลเดอร์ปรับจำนวน (1 - 6,000 อัน)
+CreateSlider(Page4, "🛹 จำนวนเสกสเก็ตบอร์ด", 1, 6000, 1000, false, function(val)
     SkateAmount = val
 end)
 
--- 2) สไลเดอร์ปรับเวลาหน่วงดีเลย์ (0.1 - 3.0 วินาที)
-CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.1, 5.0, 1.0, true, function(val)
+-- 3) สไลเดอร์ปรับเวลาหน่วงดีเลย์ (0.1 - 3.0 วินาที)
+CreateSlider(Page4, "⏱️ เวลาหน่วง (วินาที)", 0.1, 3.0, 1.0, true, function(val)
     LagDelay = val
 end)
 
--- 3) ปุ่มเปิด/ปิดสวิตช์ทำงาน (ส่งค่าแบบ Real-Time)
-CreateToggle(Page4, "💥 เปิดปิง์(Real-Time)", function(state)
+-- 4) ปุ่มเปิด/ปิดสวิตช์ทำงาน (ส่งค่าแบบ Real-Time)
+CreateToggle(Page4, "💥 เปิดสวิตช์ Lag Server (Real-Time)", function(state)
     LagServerActive = state
 end)
 
--- 4) ปุ่มกดลบรถทั้งหมดที่เสกมา
+-- 5) ปุ่มกดลบรถทั้งหมดที่เสกมา
 CreateButton(Page4, "🗑️ ลบรถที่เสกมาทั้งหมด (Delete Car)", function()
     pcall(function()
         if DeleteCarRemote1 then DeleteCarRemote1:FireServer("NoMotorVehicleDeleteCar") end
@@ -711,4 +754,4 @@ task.spawn(function()
     end
 end)
 
-print("HONKUKIXYZEIEI HUB Real-Time Lag & Delete Car Loaded Successfully!")
+print("HONKUKIXYZEIEI HUB Real-Time Lag & Hide Skate Loaded Successfully!")
