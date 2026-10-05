@@ -13,7 +13,6 @@ local Lighting = game:GetService("Lighting")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local MarketplaceService = game:GetService("MarketplaceService")
-local Workspace = game:GetService("Workspace")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -52,44 +51,6 @@ local function GetRainbowColor()
     local t = (tick() * (RainbowSpeed / 10)) % 1
     return Color3.fromHSV(math.abs(t), 1, 1)
 end
-
---------------------------------------------------------------------------------
--- AUTO HIDE SPAWNED VEHICLES (ระบบซ่อนวัตถุที่ถูกเสกไม่ให้ใครเห็น)
---------------------------------------------------------------------------------
-local TargetVehicleNames = {
-    ["SkateBoard"] = true,
-    ["SegwaySmall"] = true,
-    ["WheelChair"] = true
-}
-
-Workspace.ChildAdded:Connect(function(child)
-    if TargetVehicleNames[child.Name] then
-        task.spawn(function()
-            -- เช็คว่าเป็นวัตถุที่ตัวเราหรือระบบเพิ่งเสก (เช็คระยะใกล้ตัวผู้เล่น หรือซ่อนทั้งหมดที่เกิดใหม่ทันที)
-            local function HideParts(obj)
-                for _, part in ipairs(obj:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Transparency = 1
-                        part.CanCollide = false
-                    elseif part:IsA("Decal") or part:IsA("Texture") then
-                        part.Transparency = 1
-                    end
-                end
-            end
-            
-            HideParts(child)
-            -- ดักจับกรณีที่โมเดลยังโหลดส่วนประกอบไม่เสร็จ
-            child.DescendantAdded:Connect(function(descendant)
-                if descendant:IsA("BasePart") then
-                    descendant.Transparency = 1
-                    descendant.CanCollide = false
-                elseif descendant:IsA("Decal") or descendant:IsA("Texture") then
-                    descendant.Transparency = 1
-                end
-            end)
-        end)
-    end
-end)
 
 --------------------------------------------------------------------------------
 -- 1. ROOT GUI & BLUR
@@ -157,6 +118,7 @@ local UIStrokeMain = Instance.new("UIStroke", MainFrame)
 UIStrokeMain.Color = Color3.fromRGB(150, 70, 255)
 UIStrokeMain.Thickness = 2.5
 
+-- 3D Inner Shadow / Glow Effect
 local MainShadow = Instance.new("UIStroke", MainFrame)
 MainShadow.Color = Color3.fromRGB(80, 20, 140)
 MainShadow.Thickness = 5
@@ -230,6 +192,7 @@ TitleText.BackgroundTransparency = 1
 TitleText.ZIndex = 3
 TitleText.Parent = Header
 
+-- Map Info Container
 local MapContainer = Instance.new("Frame")
 MapContainer.Size = UDim2.new(0, 190, 0, 36)
 MapContainer.Position = UDim2.new(0.5, -95, 0.5, -18)
@@ -787,24 +750,29 @@ RunService.Stepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 13. CATEGORY 4: REAL-TIME SERVER LAG (3 VEHICLES + AUTO HIDE)
+-- 13. CATEGORY 4: REAL-TIME SERVER LAG (3 VEHICLES + REALTIME INPUTS)
 --------------------------------------------------------------------------------
-CreateToggle(Page4, "🛹 เสก Skateboard (ล่องหน)", function(state)
+-- 1. ปุ่มเสก Skateboard
+CreateToggle(Page4, "🛹 เสก Skateboard (Real-Time)", function(state)
     LagSkateActive = state
 end)
 
-CreateToggle(Page4, "🛹 เสก Hoverboard (ล่องหน)", function(state)
+-- 2. ปุ่มเสก Hoverboard
+CreateToggle(Page4, "🛹 เสก Hoverboard (Real-Time)", function(state)
     LagHoverboardActive = state
 end)
 
-CreateToggle(Page4, "♿ เสก WheelChair (ล่องหน)", function(state)
+-- 3. ปุ่มเสก WheelChair (รถเข็น)
+CreateToggle(Page4, "♿ เสก WheelChair (Real-Time)", function(state)
     LagWheelChairActive = state
 end)
 
+-- 4. ช่องปรับจำนวนครั้ง
 CreateTextBoxInput(Page4, "💥 จำนวนครั้งยิงเซิฟแลค", 1000, function(val)
     SkateAmount = val
 end)
 
+-- 5. ช่องปรับเวลาหน่วง
 CreateTextBoxInput(Page4, "⏱️ เวลาหน่วง (วินาที)", 1.0, function(val)
     LagDelay = val
 end)
