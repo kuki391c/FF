@@ -35,7 +35,6 @@ local ESPActive = false
 local AntiSitActive = false
 local AntiFlingActive = false
 local AntiLagActive = false
-local SuperProtActive = false
 
 -- Lag Server Vehicles Active States
 local LagSkateActive = false
@@ -294,7 +293,7 @@ end
 
 local Tab1Btn = CreateTabBtn("🚗 Vehicle", 1)
 local Tab2Btn = CreateTabBtn("👤 Player", 2)
-local Tab3Btn = CreateTabBtn("🛡️ Protect", 3)
+local Tab3Btn = CreateTabBtn("🛡️️ Protect", 3)
 local Tab4Btn = CreateTabBtn("⚡ Lag Server", 4)
 
 --------------------------------------------------------------------------------
@@ -541,7 +540,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------------------------------------
--- 11. CATEGORY 2: PLAYER FEATURES
+-- 11. CATEGORY 2: PLAYER FEATURES (FIXED DROPDOWN & INDEPENDENT REFRESH)
 --------------------------------------------------------------------------------
 CreateTextBoxInput(Page2, "⚡ ความเร็วผู้เล่น (WalkSpeed)", 16, function(val)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
@@ -569,28 +568,57 @@ SelectedText.BackgroundTransparency = 1
 SelectedText.ZIndex = 5
 SelectedText.Parent = SelectFrame
 
+local SelectPlayerBtn = Instance.new("TextButton")
+SelectPlayerBtn.Size = UDim2.new(0, 55, 0, 28)
+SelectPlayerBtn.Position = UDim2.new(1, -100, 0.5, -14)
+SelectPlayerBtn.BackgroundColor3 = Color3.fromRGB(100, 45, 170)
+SelectPlayerBtn.Text = "👤 เลือก"
+SelectPlayerBtn.Font = Enum.Font.GothamBold
+SelectPlayerBtn.TextSize = 10
+SelectPlayerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SelectPlayerBtn.ZIndex = 5
+SelectPlayerBtn.Parent = SelectFrame
+Instance.new("UICorner", SelectPlayerBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", SelectPlayerBtn).Color = Color3.fromRGB(180, 100, 255)
+
 local RefreshBtn = Instance.new("TextButton")
-RefreshBtn.Size = UDim2.new(0, 90, 0, 28)
-RefreshBtn.Position = UDim2.new(1, -95, 0.5, -14)
-RefreshBtn.BackgroundColor3 = Color3.fromRGB(100, 45, 170)
-RefreshBtn.Text = "🔄 Refresh"
+RefreshBtn.Size = UDim2.new(0, 36, 0, 28)
+RefreshBtn.Position = UDim2.new(1, -41, 0.5, -14)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 100)
+RefreshBtn.Text = "🔄"
 RefreshBtn.Font = Enum.Font.GothamBold
-RefreshBtn.TextSize = 10
+RefreshBtn.TextSize = 12
 RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 RefreshBtn.ZIndex = 5
 RefreshBtn.Parent = SelectFrame
 Instance.new("UICorner", RefreshBtn).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", RefreshBtn).Color = Color3.fromRGB(180, 100, 255)
+Instance.new("UIStroke", RefreshBtn).Color = Color3.fromRGB(150, 80, 220)
 
+-- Player List Pop-up Container (วางไว้นอก MainFrame เพื่อไม่ให้โดน ClipsDescendants ตัดและเลื่อนอิสระ)
 local PlayerListFrame = Instance.new("ScrollingFrame")
-PlayerListFrame.Size = UDim2.new(0, 220, 0, 160)
-PlayerListFrame.Position = UDim2.new(0.5, -110, 0.5, -80)
-PlayerListFrame.BackgroundColor3 = Color3.fromRGB(20, 12, 32)
+PlayerListFrame.Size = UDim2.new(0, 240, 0, 180)
+PlayerListFrame.Position = UDim2.new(0.5, -120, 0.5, -90)
+PlayerListFrame.BackgroundColor3 = Color3.fromRGB(18, 10, 30)
+PlayerListFrame.BorderSizePixel = 0
 PlayerListFrame.Visible = false
-PlayerListFrame.ZIndex = 20
+PlayerListFrame.ZIndex = 50
+PlayerListFrame.ScrollBarThickness = 4
+PlayerListFrame.ScrollBarImageColor3 = Color3.fromRGB(180, 100, 255)
 PlayerListFrame.Parent = ScreenGui
-Instance.new("UICorner", PlayerListFrame).CornerRadius = UDim.new(0, 10)
-Instance.new("UIListLayout", PlayerListFrame).Padding = UDim.new(0, 4)
+
+Instance.new("UICorner", PlayerListFrame).CornerRadius = UDim.new(0, 12)
+local ListStroke = Instance.new("UIStroke", PlayerListFrame)
+ListStroke.Color = Color3.fromRGB(170, 80, 255)
+ListStroke.Thickness = 2
+
+local ListLayout = Instance.new("UIListLayout", PlayerListFrame)
+ListLayout.Padding = UDim.new(0, 5)
+ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local ListPadding = Instance.new("UIPadding", PlayerListFrame)
+ListPadding.PaddingTop = UDim.new(0, 6)
+ListPadding.PaddingBottom = UDim.new(0, 6)
 
 local function UpdatePlayerList()
     for _, v in pairs(PlayerListFrame:GetChildren()) do
@@ -599,17 +627,19 @@ local function UpdatePlayerList()
     
     for _, plr in pairs(Players:GetPlayers()) do
         local pBtn = Instance.new("TextButton")
-        pBtn.Size = UDim2.new(1, -8, 0, 28)
-        pBtn.BackgroundColor3 = Color3.fromRGB(40, 22, 65)
+        pBtn.Size = UDim2.new(1, -12, 0, 32)
+        pBtn.BackgroundColor3 = Color3.fromRGB(35, 18, 55)
         
         local labelText = plr.DisplayName .. " (@" .. plr.Name .. ")"
         if plr.Name == LocalPlayer.Name then labelText = "⭐ [คุณ] " .. labelText end
         pBtn.Text = labelText
         pBtn.Font = Enum.Font.GothamMedium
         pBtn.TextSize = 10
-        pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        pBtn.ZIndex = 21
+        pBtn.TextColor3 = Color3.fromRGB(240, 230, 255)
+        pBtn.ZIndex = 51
         pBtn.Parent = PlayerListFrame
+
+        Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 8)
 
         pBtn.MouseButton1Click:Connect(function()
             SelectedPlayer = plr
@@ -619,9 +649,13 @@ local function UpdatePlayerList()
     end
 end
 
-RefreshBtn.MouseButton1Click:Connect(function()
+SelectPlayerBtn.MouseButton1Click:Connect(function()
     UpdatePlayerList()
     PlayerListFrame.Visible = not PlayerListFrame.Visible
+end)
+
+RefreshBtn.MouseButton1Click:Connect(function()
+    UpdatePlayerList()
 end)
 
 CreateButton(Page2, "🚀 วาร์ปไปหาผู้เล่น (TP)", function()
@@ -696,7 +730,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 12. CATEGORY 3: PROTECTION & ANTI-LAG
+-- 12. CATEGORY 3: PROTECTION & ANTI-LAG (ULTIMATE ANTI-FLING)
 --------------------------------------------------------------------------------
 CreateToggle(Page3, "🪑 ป้องกันการนั่ง (Anti-Sit)", function(state) AntiSitActive = state end)
 
@@ -708,14 +742,26 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-CreateToggle(Page3, "🌀 ป้องกันแรงเหวี่ยง (Anti-Fling)", function(state) AntiFlingActive = state end)
+-- ระบบป้องกันแรงเหวี่ยงโคตรมหาศาล (Ultimate Anti-Fling + Super Protection ผสมกัน)
+CreateToggle(Page3, "🌀 ป้องกันแรงเหวี่ยงมหาศาล (Anti-Fling God)", function(state) AntiFlingActive = state end)
 
 RunService.Heartbeat:Connect(function()
-    if AntiFlingActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local root = LocalPlayer.Character.HumanoidRootPart
-        if root.AssemblyLinearVelocity.Magnitude > 100 then
-            root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    if LocalPlayer.Character then
+        local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            if AntiFlingActive then
+                -- ล็อกความเร็วและแรงเหวี่ยงที่หลุดโลกให้เป็นศูนย์ทันที ป้องกันปลิวทะลุแมพ
+                if root.AssemblyLinearVelocity.Magnitude > 60 or root.AssemblyAngularVelocity.Magnitude > 60 then
+                    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                end
+                -- ปิดการชนกับวัตถุแปลกปลอมรอบตัวเพื่อไม่ให้โดนอัดกระแทกจนปลิว
+                for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                        part.CanCollide = false
+                    end
+                end
+            end
         end
     end
 end)
@@ -737,42 +783,25 @@ task.spawn(function()
     end
 end)
 
-CreateToggle(Page3, "🛡️ Super Protection (ULTIMATE)", function(state) SuperProtActive = state end)
-
-RunService.Stepped:Connect(function()
-    if SuperProtActive and LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
-end)
-
 --------------------------------------------------------------------------------
 -- 13. CATEGORY 4: REAL-TIME SERVER LAG (3 VEHICLES + REALTIME INPUTS)
 --------------------------------------------------------------------------------
--- 1. ปุ่มเสก Skateboard
 CreateToggle(Page4, "🛹 เสก Skateboard (Real-Time)", function(state)
     LagSkateActive = state
 end)
 
--- 2. ปุ่มเสก Hoverboard
 CreateToggle(Page4, "🛹 เสก Hoverboard (Real-Time)", function(state)
     LagHoverboardActive = state
 end)
 
--- 3. ปุ่มเสก WheelChair (รถเข็น)
 CreateToggle(Page4, "♿ เสก WheelChair (Real-Time)", function(state)
     LagWheelChairActive = state
 end)
 
--- 4. ช่องปรับจำนวนครั้ง
 CreateTextBoxInput(Page4, "💥 จำนวนครั้งยิงเซิฟแลค", 1000, function(val)
     SkateAmount = val
 end)
 
--- 5. ช่องปรับเวลาหน่วง
 CreateTextBoxInput(Page4, "⏱️ เวลาหน่วง (วินาที)", 1.0, function(val)
     LagDelay = val
 end)
