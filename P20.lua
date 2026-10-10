@@ -117,7 +117,6 @@ local UIStrokeMain = Instance.new("UIStroke", MainFrame)
 UIStrokeMain.Color = Color3.fromRGB(150, 70, 255)
 UIStrokeMain.Thickness = 2.5
 
--- 3D Inner Shadow / Glow Effect
 local MainShadow = Instance.new("UIStroke", MainFrame)
 MainShadow.Color = Color3.fromRGB(80, 20, 140)
 MainShadow.Thickness = 5
@@ -191,7 +190,6 @@ TitleText.BackgroundTransparency = 1
 TitleText.ZIndex = 3
 TitleText.Parent = Header
 
--- Map Info Container
 local MapContainer = Instance.new("Frame")
 MapContainer.Size = UDim2.new(0, 190, 0, 36)
 MapContainer.Position = UDim2.new(0.5, -95, 0.5, -18)
@@ -293,7 +291,7 @@ end
 
 local Tab1Btn = CreateTabBtn("🚗 Vehicle", 1)
 local Tab2Btn = CreateTabBtn("👤 Player", 2)
-local Tab3Btn = CreateTabBtn("🛡️️ Protect", 3)
+local Tab3Btn = CreateTabBtn("🛡 Protect", 3)
 local Tab4Btn = CreateTabBtn("⚡ Lag Server", 4)
 
 --------------------------------------------------------------------------------
@@ -540,7 +538,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------------------------------------
--- 11. CATEGORY 2: PLAYER FEATURES (FIXED DROPDOWN & INDEPENDENT REFRESH)
+-- 11. CATEGORY 2: PLAYER FEATURES
 --------------------------------------------------------------------------------
 CreateTextBoxInput(Page2, "⚡ ความเร็วผู้เล่น (WalkSpeed)", 16, function(val)
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
@@ -594,7 +592,6 @@ RefreshBtn.Parent = SelectFrame
 Instance.new("UICorner", RefreshBtn).CornerRadius = UDim.new(0, 8)
 Instance.new("UIStroke", RefreshBtn).Color = Color3.fromRGB(150, 80, 220)
 
--- Player List Pop-up Container (วางไว้นอก MainFrame เพื่อไม่ให้โดน ClipsDescendants ตัดและเลื่อนอิสระ)
 local PlayerListFrame = Instance.new("ScrollingFrame")
 PlayerListFrame.Size = UDim2.new(0, 240, 0, 180)
 PlayerListFrame.Position = UDim2.new(0.5, -120, 0.5, -90)
@@ -730,36 +727,54 @@ RunService.RenderStepped:Connect(function()
 end)
 
 --------------------------------------------------------------------------------
--- 12. CATEGORY 3: PROTECTION & ANTI-LAG (ULTIMATE ANTI-FLING)
+-- 12. CATEGORY 3: PROTECTION & ANTI-LAG (ULTIMATE ANTI-FLING & ANTI-SIT)
 --------------------------------------------------------------------------------
-CreateToggle(Page3, "🪑 ป้องกันการนั่ง (Anti-Sit)", function(state) AntiSitActive = state end)
+
+-- 1. ป้องกันการนั่งแบบเด็ดขาด (บังคับลุกทันทีและบล็อกสถานะ Seated)
+CreateToggle(Page3, "🪑 ป้องกันการนั่ง (Anti-Sit 100%)", function(state) 
+    AntiSitActive = state 
+end)
 
 RunService.Heartbeat:Connect(function()
-    if AntiSitActive and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
-    elseif LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local humanoid = LocalPlayer.Character.Humanoid
+        if AntiSitActive then
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+            if humanoid:GetState() == Enum.HumanoidStateType.Seated then
+                humanoid.Sit = false
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
+        else
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        end
     end
 end)
 
--- ระบบป้องกันแรงเหวี่ยงโคตรมหาศาล (Ultimate Anti-Fling + Super Protection ผสมกัน)
-CreateToggle(Page3, "🌀 ป้องกันแรงเหวี่ยงมหาศาล (Anti-Fling God)", function(state) AntiFlingActive = state end)
+-- 2. ป้องกันแรงเหวี่ยงมหาศาลขั้นเทพ (กันประตู, เรือ, รถ, หรือทุกวัตถุกระเด็นใส่ 100%)
+CreateToggle(Page3, "🌀 ป้องกันแรงเหวี่ยงทุกสิ่ง (Anti-Fling God)", function(state) 
+    AntiFlingActive = state 
+end)
 
 RunService.Heartbeat:Connect(function()
     if LocalPlayer.Character then
         local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if root then
             if AntiFlingActive then
-                -- ล็อกความเร็วและแรงเหวี่ยงที่หลุดโลกให้เป็นศูนย์ทันที ป้องกันปลิวทะลุแมพ
-                if root.AssemblyLinearVelocity.Magnitude > 60 or root.AssemblyAngularVelocity.Magnitude > 60 then
+                -- ล็อกความเร็วไม่ให้พุ่งปลิว
+                if root.AssemblyLinearVelocity.Magnitude > 50 or root.AssemblyAngularVelocity.Magnitude > 50 then
                     root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                     root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
                 end
-                -- ปิดการชนกับวัตถุแปลกปลอมรอบตัวเพื่อไม่ให้โดนอัดกระแทกจนปลิว
+                -- ปิดการชนกับวัตถุรอบตัว (ประตู, ยานพาหนะ, วัตถุของคนอื่น) เพื่อไม่ให้โดนอัดกระแทก
                 for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
                     if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
                         part.CanCollide = false
                     end
+                end
+                -- ป้องกันไม่ให้โดนจับนั่งหรือโดนฟลิงค์ผ่านเครื่องมือ
+                if humanoid then
+                    humanoid.PlatformStand = false
                 end
             end
         end
@@ -768,19 +783,117 @@ end)
 
 CreateToggle(Page3, "🧹 ป้องกันแลก (Anti-Lag Cache)", function(state) AntiLagActive = state end)
 
-task.spawn(function()
-    while true do
-        task.wait(30)
-        if AntiLagActive then
-            pcall(function()
-                for _, v in pairs(game:GetService("Workspace"):GetDescendants()) do
-                    if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") then
-                        v.Enabled = false
-                    end
+--------------------------------------------------------------------------------
+-- 3. ปุ่มกดรันสคริปต์ FREEZE MOBILE (เพิ่มในหมวดหมู่ที่ 3)
+--------------------------------------------------------------------------------
+CreateButton(Page3, "🧊 รันสคริปต์ Freeze (ปุ่มลอยจอ)", function()
+    local playerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+    -- ลบ GUI เก่าทิ้งก่อน (ถ้ามี เพื่อไม่ให้ซ้อนกันเวลารันซ้ำ)
+    if playerGui:FindFirstChild("FreezeGuiMobile") then
+        playerGui.FreezeGuiMobile:Destroy()
+    end
+
+    -- สร้าง ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "FreezeGuiMobile"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = playerGui
+
+    -- สร้างปุ่มวงกลมหลัก
+    local freezeBtn = Instance.new("TextButton")
+    freezeBtn.Size = UDim2.new(0, 70, 0, 70)
+    freezeBtn.Position = UDim2.new(0.1, 0, 0.5, -35)
+    freezeBtn.Text = "FREEZE"
+    freezeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    freezeBtn.TextScaled = true
+    freezeBtn.Font = Enum.Font.GothamBold
+    freezeBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    freezeBtn.BorderSizePixel = 0
+    freezeBtn.Parent = screenGui
+
+    -- ทำให้ปุ่มเป็นวงกลม
+    local uiCorner = Instance.new("UICorner")
+    uiCorner.CornerRadius = UDim.new(1, 0)
+    uiCorner.Parent = freezeBtn
+
+    -- เพิ่มเงาให้ปุ่มดูสวยงาม (Stroke)
+    local uiStroke = Instance.new("UIStroke")
+    uiStroke.Thickness = 3
+    uiStroke.Color = Color3.fromRGB(255, 255, 255)
+    uiStroke.Parent = freezeBtn
+
+    -- ระบบทำให้ปุ่มลากเลื่อนได้อิสระ (รองรับทั้งมือถือและเมาส์)
+    local dragging, dragInput, dragStart, startPos
+
+    freezeBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = freezeBtn.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
                 end
             end)
         end
-    end
+    end)
+
+    freezeBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            freezeBtn.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    -- ระบบเปิด-ปิดการแช่แข็งตัวละคร
+    local isFrozen = false
+
+    freezeBtn.MouseButton1Click:Connect(function()
+        local character = LocalPlayer.Character
+        if not character then return end
+        
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        local rootPart = character:FindFirstChild("HumanoidRootPart")
+        
+        if not humanoid or not rootPart then return end
+        
+        isFrozen = not isFrozen
+        
+        if isFrozen then
+            -- แช่แข็ง
+            rootPart.Anchored = true
+            humanoid.WalkSpeed = 0
+            humanoid.JumpPower = 0
+            humanoid.JumpHeight = 0
+            
+            freezeBtn.Text = "UN"
+            freezeBtn.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
+            uiStroke.Color = Color3.fromRGB(200, 0, 0)
+        else
+            -- คืนค่าปกติ
+            rootPart.Anchored = false
+            humanoid.WalkSpeed = 16
+            humanoid.JumpPower = 50
+            humanoid.JumpHeight = 7.2
+            
+            freezeBtn.Text = "FREEZE"
+            freezeBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+            uiStroke.Color = Color3.fromRGB(255, 255, 255)
+        end
+    end)
 end)
 
 --------------------------------------------------------------------------------
