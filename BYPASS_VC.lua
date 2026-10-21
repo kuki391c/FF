@@ -2,7 +2,6 @@
 -- Crack by HONKUKI
 -- HONKUKI 191 deklnwza only
 -- ============================================================
--- [deobf] folded 0 repeated calls into 0 helper functions and 8 unrolled runs into loops
 local Players = game:GetService("Players")
 local Stats = game:GetService("Stats")
 local TextService = game:GetService("TextService")
