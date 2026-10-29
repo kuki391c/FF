@@ -10931,6 +10931,18 @@ local function encodeIdAsUrlHex0x(idStr)
     return table.concat(out)
 end
 
+-- ✅ NEW: encode decimal ทีละตัวเป็น %XX (ไม่ผ่าน 0x) — สำหรับวาง ID จริงกลาง junk ด้วย &id=
+-- ต่างจาก encodeIdAsUrlHex0x ตรงที่ C++ query parser (&id=) รับเฉพาะ pure decimal digits
+local function encodeDecimalPercent(idStr)
+    local s = tostring(idStr or ""):match("%d+") or tostring(idStr or "")
+    local out = {}
+    for i = 1, #s do
+        out[#out + 1] = toHexByte(string.byte(s, i))
+    end
+    return table.concat(out)
+    -- "100111371337717" → "%31%30%30%31%31%31%33%37%31%33%33%37%37%31%37"
+end
+
 -- สุ่มตำแหน่งตัวเลขเปลือย 2 ตำแหน่งผสมกับ %3X พิมพ์ใหญ่ (สำหรับวางกับดักหลอกสคริปต์รุ่นเก่า)
 local function encodeMixedHex(idStr)
     local s = tostring(idStr)
@@ -11239,14 +11251,15 @@ local function buildUriDifferentialPayload(rawId)
     --    [0 × 400 เว้นวรรค] + space-fractured decimal (เล่นได้) + hex+encode 0x (ลายเซ็นหน้าสุด)
     --    ห้ามมีตัวเลขดิบ / Id= จริง ซ้อนทับด้านหลังอีก — ไม่เช่นนั้นจะเล่น payload เก่าแทน
     local zeroParts = {}
-    for zi = 1, 400 do
-        zeroParts[zi] = "0"
-    end
-    local zeroLine = table.concat(zeroParts, " ")
-    -- base ก่อน & ตัวแรก = ศูนย์คั่นช่องว่าง + percent-hex ของเลขทศนิยมจริง → strip space แล้วได้ cleanId
-    -- ต่อท้ายด้วย hex+encode แบบ 0x ใน query แยกต่างหาก (anti-steal signature ด้านหน้า)
-    local playHead = zeroLine .. " " .. encodeSpaceFractured(cleanId) .. "&%00&hex=" .. encodeIdAsUrlHex0x(cleanId) .. "&%00&"
-    table.insert(lines, playHead)
+for zi = 1, 400 do
+    zeroParts[zi] = "0"
+end
+local zeroLine = table.concat(zeroParts, " ")
+-- 🔥 base path = 0s ล้วน (C++ จะเห็นเป็น base INVALID) → ไม่เล่นจาก base อีก
+--    hex decoy ยังอยู่บนสุด (เหมือนเดิม) แต่เป็นแค่หุ่นไล่กา C++ ignore
+--    ID จริงจะถูกใส่กลาง junk ที่ realLineIdx ด้วย &id= (ดูจุดที่ 3)
+local playHead = zeroLine .. "&%00&hex=" .. encodeIdAsUrlHex0x(cleanId) .. "&%00&"
+table.insert(lines, playHead)
 
     -- bait หลอก logger — เข้ารหัสไม่ให้เป็นตัวเลขดิบติดกัน (กัน C++ ไปเล่น bait แทน)
     local baitLeadId = "120232514292241"
@@ -11280,25 +11293,40 @@ local function buildUriDifferentialPayload(rawId)
         table.insert(duplicateClusterPool, pickUniqueBaitOrGarbage(cleanId, roundNum, roundSeenMap))
     end
 
-    -- 3. สร้างม่านตัวล่อแบบสับไปสับมา (Back-and-Forth Multi-Segment Shuffled Labyrinth)
-    for i = 1, totalLines do
-        -- ไม่ใส่ ID จริงซ้ำใน labyrinth อีก — เพลงจริงอยู่ที่บรรทัดหน้าสุด (hex+encode) เท่านั้น
-        -- ใช้เฉพาะ Poisoned / Fake key เพื่อไม่ให้ C++ รีเซ็ต base ไปเล่น payload เก่า
-        do
-            local segCount = math.random(2, 4)
-            local segs = {}
-            local useDupBait = (math.random(1, 5) == 1) and duplicateClusterPool[math.random(1, #duplicateClusterPool)] or nil
-            for sIdx = 1, segCount do
-                local roll = math.random(1, 100)
-                if roll <= 62 then
-                    table.insert(segs, buildRandomPoisonedIdSegment(cleanId, roundNum, roundSeenMap, (sIdx == 1) and useDupBait or nil))
-                else
-                    table.insert(segs, buildRandomFakeKeySegment(cleanId, roundNum, roundSeenMap))
-                end
+    -- 3. สร้างม่านตัวล่อ + วาง ID จริงที่ realLineIdx ด้วย &id= + encodeDecimalPercent
+--    🎵 ID จริงใช้ &id= ที่เข้ารหัสแบบ decimal %XX (C++ query parser อ่านได้)
+--    Poison/fake ที่เหลือใช้ key ที่ C++ skip ปลอดภัย
+local realKeyVariants = {
+    "& % 6 9 % 6 4 = ",       -- &id=
+    "&  % 6 9  % 6 4  =  ",   -- &id= (space-fractured)
+    "&  i  % 6 4  =  ",       -- &i%64=
+    "& % 6 9  d =  ",         -- &%69d=
+    "&   i   d   =   ",       -- &id= (raw)
+    "&  i  d  =  ",           -- &id= (space-friendly)
+}
+local realKey = realKeyVariants[math.random(1, #realKeyVariants)]
+local realIdSegment = realKey .. encodeDecimalPercent(cleanId) .. "&%00"
+
+for i = 1, totalLines do
+    if i == realLineIdx then
+        -- 🔥 บรรทัดนี้คือ ID จริง — C++ จะเล่นเพลงจาก &id= ตัวนี้
+        table.insert(lines, "%E2%80%AE" .. realIdSegment)
+    else
+        -- Poison/fake ที่เหลือ (C++ skip ปลอดภัย ไม่ทับ ID จริง)
+        local segCount = math.random(2, 4)
+        local segs = {}
+        local useDupBait = (math.random(1, 5) == 1) and duplicateClusterPool[math.random(1, #duplicateClusterPool)] or nil
+        for sIdx = 1, segCount do
+            local roll = math.random(1, 100)
+            if roll <= 62 then
+                table.insert(segs, buildRandomPoisonedIdSegment(cleanId, roundNum, roundSeenMap, (sIdx == 1) and useDupBait or nil))
+            else
+                table.insert(segs, buildRandomFakeKeySegment(cleanId, roundNum, roundSeenMap))
             end
-            table.insert(lines, "%E2%80%AE" .. table.concat(segs, ""))
         end
+        table.insert(lines, "%E2%80%AE" .. table.concat(segs, ""))
     end
+end
 
     -- 5. ปิดท้ายด้วยม่านกับดัก Delimiter & Multi-Key Flood (เปลี่ยนใหม่ทุกรอบ)
     for _ = 1, math.random(14, 22) do
